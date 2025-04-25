@@ -17,7 +17,6 @@ const Header = () => {
                 className="h-10 w-auto"
               />
               <Separator orientation="vertical" className="h-8 bg-white/20" />
-              <span className="text-white font-semibold">New Delivery System</span>
             </div>
             <div className="flex items-center gap-4">
               <div className="relative w-64">
