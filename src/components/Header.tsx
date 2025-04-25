@@ -12,12 +12,9 @@ const Header = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <img
-                src="/bri-logo.png"
-                alt="BRI Logo"
-                className="h-8"
-                onError={(e) => {
-                  e.currentTarget.src = 'https://placehold.co/80x32/white/blue?text=BRI';
-                }}
+                src="/lovable-uploads/3573b1bb-d398-4186-8da6-2a2dae49e4b0.png"
+                alt="BRI New Delivery System Logo"
+                className="h-10 w-auto"
               />
               <Separator orientation="vertical" className="h-8 bg-white/20" />
               <span className="text-white font-semibold">New Delivery System</span>
