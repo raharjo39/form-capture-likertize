@@ -1,11 +1,13 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import StarRating from '@/components/StarRating';
-import CheckboxGroup from '@/components/CheckboxGroup';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Label } from '@/components/ui/label';
 
 const menuOptions = [
   { id: 'pembukaan-rekening', label: 'Pembukaan Rekening' },
@@ -16,10 +18,8 @@ const menuOptions = [
 const Index = () => {
   const { toast } = useToast();
   const [rating, setRating] = useState(0);
-  const [optimalOptions, setOptimalOptions] = useState<string[]>([]);
-  const [optimalOther, setOptimalOther] = useState('');
-  const [nonOptimalOptions, setNonOptimalOptions] = useState<string[]>([]);
-  const [nonOptimalOther, setNonOptimalOther] = useState('');
+  const [networkPerformance, setNetworkPerformance] = useState('normal');
+  const [slowFeatures, setSlowFeatures] = useState<string[]>([]);
   const [feedback, setFeedback] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -41,11 +41,17 @@ const Index = () => {
 
     // Reset form
     setRating(0);
-    setOptimalOptions([]);
-    setOptimalOther('');
-    setNonOptimalOptions([]);
-    setNonOptimalOther('');
+    setNetworkPerformance('normal');
+    setSlowFeatures([]);
     setFeedback('');
+  };
+
+  const handleFeatureToggle = (id: string) => {
+    setSlowFeatures(current =>
+      current.includes(id)
+        ? current.filter(item => item !== id)
+        : [...current, id]
+    );
   };
 
   return (
@@ -53,71 +59,84 @@ const Index = () => {
       <Header />
       <div className="py-8 flex-grow">
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm p-8">
-          <div className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Section 1: Rating */}
             <div className="text-center space-y-4">
               <h2 className="text-2xl font-bold">Seberapa puaskah Anda dengan aplikasi NDS?</h2>
               <StarRating rating={rating} onRatingChange={setRating} />
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
-              <CheckboxGroup
-                title="Menu NDS yang Paling Optimal"
-                options={menuOptions}
-                selectedOptions={optimalOptions}
-                onOptionChange={(id) => {
-                  if (optimalOptions.includes(id)) {
-                    setOptimalOptions(optimalOptions.filter(item => item !== id));
-                  } else {
-                    setOptimalOptions([...optimalOptions, id]);
-                  }
-                }}
-                otherValue={optimalOther}
-                onOtherChange={setOptimalOther}
-              />
+            {/* Section 2: Network Performance (Only shown if rating < 5) */}
+            {rating > 0 && rating < 5 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Bagaimana Performa Jarkom?</h3>
+                <RadioGroup
+                  value={networkPerformance}
+                  onValueChange={setNetworkPerformance}
+                  className="flex flex-col space-y-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="normal" id="normal" />
+                    <Label htmlFor="normal">Normal</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="slow" id="slow" />
+                    <Label htmlFor="slow">Lambat</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="timeout" id="timeout" />
+                    <Label htmlFor="timeout">Parah/Time Out</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
 
-              <CheckboxGroup
-                title="Menu NDS yang Kurang Optimal"
-                options={menuOptions}
-                selectedOptions={nonOptimalOptions}
-                onOptionChange={(id) => {
-                  if (nonOptimalOptions.includes(id)) {
-                    setNonOptimalOptions(nonOptimalOptions.filter(item => item !== id));
-                  } else {
-                    setNonOptimalOptions([...nonOptimalOptions, id]);
-                  }
-                }}
-                otherValue={nonOptimalOther}
-                onOtherChange={setNonOptimalOther}
-              />
+            {/* Section 3: Slow Features */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Fitur di NDS apa yang dirasa lambat?</h3>
+              <div className="space-y-2">
+                {menuOptions.map((option) => (
+                  <div key={option.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={option.id}
+                      checked={slowFeatures.includes(option.id)}
+                      onChange={() => handleFeatureToggle(option.id)}
+                      className="rounded border-gray-300"
+                    />
+                    <Label htmlFor={option.id}>{option.label}</Label>
+                  </div>
+                ))}
+              </div>
             </div>
 
+            {/* Section 4: Comments */}
             <div className="space-y-2">
-              <label className="text-lg font-medium">Saran (optional)</label>
+              <Label className="text-lg font-medium">Komentar (optional)</Label>
               <Textarea
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Berikan saran Anda"
+                placeholder="Berikan komentar Anda"
                 className="h-32"
               />
             </div>
 
             <div className="flex justify-end gap-4">
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => {
                   setRating(0);
-                  setOptimalOptions([]);
-                  setOptimalOther('');
-                  setNonOptimalOptions([]);
-                  setNonOptimalOther('');
+                  setNetworkPerformance('normal');
+                  setSlowFeatures([]);
                   setFeedback('');
                 }}
               >
                 Batal
               </Button>
-              <Button onClick={handleSubmit}>Kirim</Button>
+              <Button type="submit">Kirim</Button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
       <Footer />
