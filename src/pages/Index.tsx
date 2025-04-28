@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -54,6 +53,8 @@ const Index = () => {
     );
   };
 
+  const showPerformanceSection = rating > 0 && rating <= 3;
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f8f9fa]">
       <Header />
@@ -66,8 +67,8 @@ const Index = () => {
               <StarRating rating={rating} onRatingChange={setRating} />
             </div>
 
-            {/* Section 2: Network Performance (Only shown if rating < 5) */}
-            {rating > 0 && rating < 5 && (
+            {/* Section 2: Network Performance (Only shown if rating <= 3) */}
+            {showPerformanceSection && (
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Bagaimana Performa Jarkom?</h3>
                 <RadioGroup
@@ -91,24 +92,26 @@ const Index = () => {
               </div>
             )}
 
-            {/* Section 3: Slow Features */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Fitur di NDS apa yang dirasa lambat?</h3>
-              <div className="space-y-2">
-                {menuOptions.map((option) => (
-                  <div key={option.id} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id={option.id}
-                      checked={slowFeatures.includes(option.id)}
-                      onChange={() => handleFeatureToggle(option.id)}
-                      className="rounded border-gray-300"
-                    />
-                    <Label htmlFor={option.id}>{option.label}</Label>
-                  </div>
-                ))}
+            {/* Section 3: Slow Features (Only shown if rating <= 3) */}
+            {showPerformanceSection && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Fitur di NDS apa yang dirasa lambat?</h3>
+                <div className="space-y-2">
+                  {menuOptions.map((option) => (
+                    <div key={option.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={option.id}
+                        checked={slowFeatures.includes(option.id)}
+                        onChange={() => handleFeatureToggle(option.id)}
+                        className="rounded border-gray-300"
+                      />
+                      <Label htmlFor={option.id}>{option.label}</Label>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Section 4: Comments */}
             <div className="space-y-2">
