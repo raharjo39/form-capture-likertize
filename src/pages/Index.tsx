@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +8,8 @@ import StarRating from '@/components/StarRating';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Label } from '@/components/ui/label';
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const menuOptions = [
   { id: 'pembukaan-rekening', label: 'Pembukaan Rekening' },
@@ -20,6 +23,8 @@ const Index = () => {
   const [networkPerformance, setNetworkPerformance] = useState('normal');
   const [slowFeatures, setSlowFeatures] = useState<string[]>([]);
   const [feedback, setFeedback] = useState('');
+  const [customFeature, setCustomFeature] = useState('');
+  const [isCustomFeatureChecked, setIsCustomFeatureChecked] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +48,8 @@ const Index = () => {
     setNetworkPerformance('normal');
     setSlowFeatures([]);
     setFeedback('');
+    setCustomFeature('');
+    setIsCustomFeatureChecked(false);
   };
 
   const handleFeatureToggle = (id: string) => {
@@ -99,16 +106,42 @@ const Index = () => {
                 <div className="space-y-2">
                   {menuOptions.map((option) => (
                     <div key={option.id} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         id={option.id}
                         checked={slowFeatures.includes(option.id)}
-                        onChange={() => handleFeatureToggle(option.id)}
-                        className="rounded border-gray-300"
+                        onCheckedChange={() => handleFeatureToggle(option.id)}
                       />
                       <Label htmlFor={option.id}>{option.label}</Label>
                     </div>
                   ))}
+                  {/* Custom feature input */}
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Checkbox
+                      id="custom-feature"
+                      checked={isCustomFeatureChecked}
+                      onCheckedChange={(checked) => {
+                        setIsCustomFeatureChecked(!!checked);
+                        if (checked && customFeature) {
+                          handleFeatureToggle('custom');
+                        } else {
+                          setSlowFeatures(current => current.filter(item => item !== 'custom'));
+                        }
+                      }}
+                    />
+                    <Input
+                      placeholder="Fitur lainnya"
+                      value={customFeature}
+                      onChange={(e) => {
+                        setCustomFeature(e.target.value);
+                        if (isCustomFeatureChecked && e.target.value) {
+                          if (!slowFeatures.includes('custom')) {
+                            handleFeatureToggle('custom');
+                          }
+                        }
+                      }}
+                      className="w-full max-w-xs"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -133,6 +166,8 @@ const Index = () => {
                   setNetworkPerformance('normal');
                   setSlowFeatures([]);
                   setFeedback('');
+                  setCustomFeature('');
+                  setIsCustomFeatureChecked(false);
                 }}
               >
                 Batal
