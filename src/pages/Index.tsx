@@ -147,7 +147,11 @@ const Index = () => {
                       onCheckedChange={(checked) => {
                         setIsCustomFeatureChecked(!!checked);
                         if (checked && customFeature) {
-                          handleFeatureToggle('custom');
+                          setSlowFeatures(current => 
+                            current.includes('custom') 
+                              ? current 
+                              : [...current, 'custom']
+                          );
                         } else {
                           setSlowFeatures(current => current.filter(item => item !== 'custom'));
                         }
@@ -160,7 +164,7 @@ const Index = () => {
                         setCustomFeature(e.target.value);
                         if (isCustomFeatureChecked && e.target.value) {
                           if (!slowFeatures.includes('custom')) {
-                            handleFeatureToggle('custom');
+                            setSlowFeatures(current => [...current, 'custom']);
                           }
                         }
                       }}
