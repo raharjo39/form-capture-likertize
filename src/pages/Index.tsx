@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const menuOptions = [
+  { id: 'semua-fitur', label: 'Semua Fitur' },
   { id: 'pembukaan-rekening', label: 'Pembukaan Rekening' },
   { id: 'maintenance-cif', label: 'Maintenance CIF' },
   { id: 'cross-selling', label: 'Cross Selling' },
@@ -53,11 +54,35 @@ const Index = () => {
   };
 
   const handleFeatureToggle = (id: string) => {
-    setSlowFeatures(current =>
-      current.includes(id)
-        ? current.filter(item => item !== id)
-        : [...current, id]
-    );
+    if (id === 'semua-fitur') {
+      if (slowFeatures.includes('semua-fitur')) {
+        // If "Semua Fitur" is already selected, unselect everything
+        setSlowFeatures([]);
+      } else {
+        // If "Semua Fitur" is being selected, select all menu options
+        setSlowFeatures(menuOptions.map(option => option.id));
+      }
+    } else {
+      // Regular toggle for other options
+      setSlowFeatures(current => {
+        if (current.includes(id)) {
+          // If removing an option, also remove "Semua Fitur" if it's selected
+          const filtered = current.filter(item => item !== id);
+          return filtered.filter(item => item !== 'semua-fitur');
+        } else {
+          // If adding an option, check if all other options (except "Semua Fitur") are now selected
+          const newSelected = [...current, id];
+          const allOtherOptionsSelected = menuOptions
+            .filter(option => option.id !== 'semua-fitur')
+            .every(option => newSelected.includes(option.id));
+          
+          // If all other options are selected, also add "Semua Fitur"
+          return allOtherOptionsSelected 
+            ? [...newSelected, 'semua-fitur'] 
+            : newSelected;
+        }
+      });
+    }
   };
 
   const showPerformanceSection = rating > 0 && rating <= 3;
