@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -54,55 +55,115 @@ const Index = () => {
 
   const handleFeatureToggle = (id: string) => {
     if (id === 'semua-fitur') {
+      // Toggle "Semua Fitur"
       if (slowFeatures.includes('semua-fitur')) {
-        // If "Semua Fitur" is already selected, unselect everything
-        setSlowFeatures([]);
+        // If "Semua Fitur" is already selected, unselect it only
+        setSlowFeatures(current => current.filter(item => item !== 'semua-fitur'));
       } else {
-        // If "Semua Fitur" is being selected, add only "semua-fitur" to the array
-        // All individual features will be considered selected via the isFeatureSelected function
-        setSlowFeatures(['semua-fitur']);
+        // If "Semua Fitur" is being selected, add it to the array
+        // And also add all individual features
+        const individualFeatures = menuOptions
+          .filter(option => option.id !== 'semua-fitur')
+          .map(option => option.id);
+        
+        const allFeatures = ['semua-fitur', ...individualFeatures];
+        if (isCustomFeatureChecked && customFeature) {
+          allFeatures.push('custom');
+        }
+        
+        setSlowFeatures(allFeatures);
       }
     } else {
-      // Regular toggle for other options
+      // Regular toggle for individual options
       setSlowFeatures(current => {
-        // If "Semua Fitur" is checked, remove it when selecting individual items
-        const withoutSemuaFitur = current.filter(item => item !== 'semua-fitur');
-        
+        // If the option is already in the array, remove it
         if (current.includes(id)) {
-          // If removing an option
-          return withoutSemuaFitur.filter(item => item !== id);
+          const updatedFeatures = current.filter(item => item !== id);
+          
+          // If any individual feature is being deselected, also deselect "Semua Fitur"
+          return updatedFeatures.filter(item => item !== 'semua-fitur');
         } else {
-          // If adding an option
-          const newSelected = [...withoutSemuaFitur, id];
+          // If the option is not in the array, add it
+          const updatedFeatures = [...current, id];
           
-          // Check if all other options (except "Semua Fitur") are now selected
-          const allOtherOptionsSelected = menuOptions
+          // Check if all individual features are now selected
+          const allIndividualSelected = menuOptions
             .filter(option => option.id !== 'semua-fitur')
-            .every(option => 
-              newSelected.includes(option.id) || 
-              (option.id === 'custom' && isCustomFeatureChecked && customFeature)
-            );
+            .every(option => updatedFeatures.includes(option.id));
+            
+          const customSelected = !isCustomFeatureChecked || !customFeature || updatedFeatures.includes('custom');
           
-          // If all other options are selected, also add "Semua Fitur"
-          return allOtherOptionsSelected ? ['semua-fitur'] : newSelected;
+          // If all individual features are selected, also add "Semua Fitur"
+          if (allIndividualSelected && customSelected) {
+            return [...updatedFeatures, 'semua-fitur'];
+          }
+          
+          return updatedFeatures;
         }
       });
     }
   };
 
-  // Function to determine if a feature should appear as selected in the UI
-  const isFeatureSelected = (id: string): boolean => {
-    if (id === 'semua-fitur') {
-      return slowFeatures.includes('semua-fitur');
-    }
+  const handleCustomFeatureToggle = (checked: boolean) => {
+    setIsCustomFeatureChecked(!!checked);
     
-    // If "Semua Fitur" is selected, all individual features should be considered selected in terms of functionality
-    // but they should NOT appear checked in the UI
-    if (slowFeatures.includes('semua-fitur')) {
-      return false;
+    if (checked && customFeature) {
+      setSlowFeatures(current => {
+        // Add 'custom' to the array
+        const updatedFeatures = current.includes('custom') ? current : [...current, 'custom'];
+        
+        // Check if all individual features are now selected
+        const allIndividualSelected = menuOptions
+          .filter(option => option.id !== 'semua-fitur')
+          .every(option => updatedFeatures.includes(option.id));
+        
+        // If all individual features are selected, also add "Semua Fitur"
+        if (allIndividualSelected) {
+          return [...updatedFeatures, 'semua-fitur'];
+        }
+        
+        return updatedFeatures;
+      });
+    } else {
+      setSlowFeatures(current => {
+        // Remove 'custom' from the array
+        const updatedFeatures = current.filter(item => item !== 'custom');
+        
+        // Also remove "Semua Fitur"
+        return updatedFeatures.filter(item => item !== 'semua-fitur');
+      });
     }
+  };
+
+  const handleCustomFeatureChange = (value: string) => {
+    setCustomFeature(value);
     
-    return slowFeatures.includes(id);
+    if (isCustomFeatureChecked && value) {
+      setSlowFeatures(current => {
+        // Add 'custom' to the array if not already there
+        const updatedFeatures = current.includes('custom') ? current : [...current, 'custom'];
+        
+        // Check if all individual features are now selected
+        const allIndividualSelected = menuOptions
+          .filter(option => option.id !== 'semua-fitur')
+          .every(option => updatedFeatures.includes(option.id));
+        
+        // If all individual features are selected, also add "Semua Fitur"
+        if (allIndividualSelected) {
+          return [...updatedFeatures, 'semua-fitur'];
+        }
+        
+        return updatedFeatures;
+      });
+    } else if (isCustomFeatureChecked && !value) {
+      setSlowFeatures(current => {
+        // Remove 'custom' from the array
+        const updatedFeatures = current.filter(item => item !== 'custom');
+        
+        // Also remove "Semua Fitur"
+        return updatedFeatures.filter(item => item !== 'semua-fitur');
+      });
+    }
   };
 
   const showPerformanceSection = rating > 0 && rating <= 3;
@@ -153,7 +214,7 @@ const Index = () => {
                     <div key={option.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={option.id}
-                        checked={isFeatureSelected(option.id)}
+                        checked={slowFeatures.includes(option.id)}
                         onCheckedChange={() => handleFeatureToggle(option.id)}
                       />
                       <Label htmlFor={option.id}>{option.label}</Label>
@@ -163,41 +224,13 @@ const Index = () => {
                   <div className="flex items-center space-x-2 pt-2">
                     <Checkbox
                       id="custom-feature"
-                      checked={isCustomFeatureChecked && (slowFeatures.includes('custom') || slowFeatures.includes('semua-fitur'))}
-                      onCheckedChange={(checked) => {
-                        setIsCustomFeatureChecked(!!checked);
-                        if (checked && customFeature) {
-                          if (slowFeatures.includes('semua-fitur')) {
-                            // Keep semua-fitur checked
-                            return;
-                          }
-                          
-                          setSlowFeatures(current => 
-                            current.includes('custom') 
-                              ? current 
-                              : [...current, 'custom']
-                          );
-                        } else {
-                          setSlowFeatures(current => current.filter(item => item !== 'custom'));
-                        }
-                      }}
+                      checked={slowFeatures.includes('custom')}
+                      onCheckedChange={(checked) => handleCustomFeatureToggle(!!checked)}
                     />
                     <Input
                       placeholder="Fitur lainnya"
                       value={customFeature}
-                      onChange={(e) => {
-                        setCustomFeature(e.target.value);
-                        if (isCustomFeatureChecked && e.target.value) {
-                          if (slowFeatures.includes('semua-fitur')) {
-                            // Keep semua-fitur checked
-                            return;
-                          }
-                          
-                          if (!slowFeatures.includes('custom')) {
-                            setSlowFeatures(current => [...current, 'custom']);
-                          }
-                        }
-                      }}
+                      onChange={(e) => handleCustomFeatureChange(e.target.value)}
                       className="w-full max-w-xs"
                     />
                   </div>
