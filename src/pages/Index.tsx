@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,30 +58,51 @@ const Index = () => {
         // If "Semua Fitur" is already selected, unselect everything
         setSlowFeatures([]);
       } else {
-        // If "Semua Fitur" is being selected, select all menu options
-        setSlowFeatures(menuOptions.map(option => option.id));
+        // If "Semua Fitur" is being selected, add only "semua-fitur" to the array
+        // All individual features will be considered selected via the isFeatureSelected function
+        setSlowFeatures(['semua-fitur']);
       }
     } else {
       // Regular toggle for other options
       setSlowFeatures(current => {
+        // If "Semua Fitur" is checked, remove it when selecting individual items
+        const withoutSemuaFitur = current.filter(item => item !== 'semua-fitur');
+        
         if (current.includes(id)) {
-          // If removing an option, also remove "Semua Fitur" if it's selected
-          const filtered = current.filter(item => item !== id);
-          return filtered.filter(item => item !== 'semua-fitur');
+          // If removing an option
+          return withoutSemuaFitur.filter(item => item !== id);
         } else {
-          // If adding an option, check if all other options (except "Semua Fitur") are now selected
-          const newSelected = [...current, id];
+          // If adding an option
+          const newSelected = [...withoutSemuaFitur, id];
+          
+          // Check if all other options (except "Semua Fitur") are now selected
           const allOtherOptionsSelected = menuOptions
             .filter(option => option.id !== 'semua-fitur')
-            .every(option => newSelected.includes(option.id));
+            .every(option => 
+              newSelected.includes(option.id) || 
+              (option.id === 'custom' && isCustomFeatureChecked && customFeature)
+            );
           
           // If all other options are selected, also add "Semua Fitur"
-          return allOtherOptionsSelected 
-            ? [...newSelected, 'semua-fitur'] 
-            : newSelected;
+          return allOtherOptionsSelected ? ['semua-fitur'] : newSelected;
         }
       });
     }
+  };
+
+  // Function to determine if a feature should appear as selected in the UI
+  const isFeatureSelected = (id: string): boolean => {
+    if (id === 'semua-fitur') {
+      return slowFeatures.includes('semua-fitur');
+    }
+    
+    // If "Semua Fitur" is selected, all individual features should be considered selected in terms of functionality
+    // but they should NOT appear checked in the UI
+    if (slowFeatures.includes('semua-fitur')) {
+      return false;
+    }
+    
+    return slowFeatures.includes(id);
   };
 
   const showPerformanceSection = rating > 0 && rating <= 3;
@@ -133,7 +153,7 @@ const Index = () => {
                     <div key={option.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={option.id}
-                        checked={slowFeatures.includes(option.id)}
+                        checked={isFeatureSelected(option.id)}
                         onCheckedChange={() => handleFeatureToggle(option.id)}
                       />
                       <Label htmlFor={option.id}>{option.label}</Label>
@@ -143,10 +163,15 @@ const Index = () => {
                   <div className="flex items-center space-x-2 pt-2">
                     <Checkbox
                       id="custom-feature"
-                      checked={isCustomFeatureChecked}
+                      checked={isCustomFeatureChecked && (slowFeatures.includes('custom') || slowFeatures.includes('semua-fitur'))}
                       onCheckedChange={(checked) => {
                         setIsCustomFeatureChecked(!!checked);
                         if (checked && customFeature) {
+                          if (slowFeatures.includes('semua-fitur')) {
+                            // Keep semua-fitur checked
+                            return;
+                          }
+                          
                           setSlowFeatures(current => 
                             current.includes('custom') 
                               ? current 
@@ -163,6 +188,11 @@ const Index = () => {
                       onChange={(e) => {
                         setCustomFeature(e.target.value);
                         if (isCustomFeatureChecked && e.target.value) {
+                          if (slowFeatures.includes('semua-fitur')) {
+                            // Keep semua-fitur checked
+                            return;
+                          }
+                          
                           if (!slowFeatures.includes('custom')) {
                             setSlowFeatures(current => [...current, 'custom']);
                           }
