@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import StarRating from '@/components/StarRating';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -12,10 +13,11 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const menuOptions = [
-  { id: 'semua-fitur', label: 'Semua Fitur' },
   { id: 'pembukaan-rekening', label: 'Pembukaan Rekening' },
   { id: 'maintenance-cif', label: 'Maintenance CIF' },
   { id: 'cross-selling', label: 'Cross Selling' },
+  { id: 'fitur-lainnya', label: 'Fitur lainnya' },
+  { id: 'semua-fitur', label: 'Semua Fitur' },
 ];
 
 const Index = () => {
@@ -26,6 +28,7 @@ const Index = () => {
   const [feedback, setFeedback] = useState('');
   const [customFeature, setCustomFeature] = useState('');
   const [isCustomFeatureChecked, setIsCustomFeatureChecked] = useState(false);
+  const [showFeaturesDialog, setShowFeaturesDialog] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,10 +54,24 @@ const Index = () => {
     setFeedback('');
     setCustomFeature('');
     setIsCustomFeatureChecked(false);
+    setShowFeaturesDialog(false);
+  };
+
+  const handleNetworkPerformanceChange = (value: string) => {
+    setNetworkPerformance(value);
+    
+    // Show popup if "Lambat" or "Parah/Time Out" is selected
+    if (value === 'slow' || value === 'timeout') {
+      setShowFeaturesDialog(true);
+    } else {
+      setShowFeaturesDialog(false);
+      setSlowFeatures([]);
+      setCustomFeature('');
+      setIsCustomFeatureChecked(false);
+    }
   };
 
   const handleFeatureToggle = (id: string) => {
-    // Simple toggle logic - each checkbox is independent
     setSlowFeatures(current =>
       current.includes(id)
         ? current.filter(item => item !== id)
@@ -107,10 +124,10 @@ const Index = () => {
             {/* Section 2: Network Performance (Only shown if rating <= 3) */}
             {showPerformanceSection && (
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Bagaimana Performa Jarkom?</h3>
+                <h3 className="text-lg font-medium">Bagaimana Response time (kecepatan) aplikasi NDS?</h3>
                 <RadioGroup
                   value={networkPerformance}
-                  onValueChange={setNetworkPerformance}
+                  onValueChange={handleNetworkPerformanceChange}
                   className="flex flex-col space-y-2"
                 >
                   <div className="flex items-center space-x-2">
@@ -126,39 +143,6 @@ const Index = () => {
                     <Label htmlFor="timeout">Parah/Time Out</Label>
                   </div>
                 </RadioGroup>
-              </div>
-            )}
-
-            {/* Section 3: Slow Features (Only shown if rating <= 3) */}
-            {showPerformanceSection && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Fitur di NDS apa yang dirasa lambat?</h3>
-                <div className="space-y-2">
-                  {menuOptions.map((option) => (
-                    <div key={option.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={option.id}
-                        checked={slowFeatures.includes(option.id)}
-                        onCheckedChange={() => handleFeatureToggle(option.id)}
-                      />
-                      <Label htmlFor={option.id}>{option.label}</Label>
-                    </div>
-                  ))}
-                  {/* Custom feature input */}
-                  <div className="flex items-center space-x-2 pt-2">
-                    <Checkbox
-                      id="custom-feature"
-                      checked={isCustomFeatureChecked}
-                      onCheckedChange={(checked) => handleCustomFeatureToggle(!!checked)}
-                    />
-                    <Input
-                      placeholder="Fitur lainnya"
-                      value={customFeature}
-                      onChange={(e) => handleCustomFeatureChange(e.target.value)}
-                      className="w-full max-w-xs"
-                    />
-                  </div>
-                </div>
               </div>
             )}
 
@@ -184,6 +168,7 @@ const Index = () => {
                   setFeedback('');
                   setCustomFeature('');
                   setIsCustomFeatureChecked(false);
+                  setShowFeaturesDialog(false);
                 }}
               >
                 Batal
@@ -191,6 +176,40 @@ const Index = () => {
               <Button type="submit">Kirim</Button>
             </div>
           </form>
+
+          {/* Features Dialog/Popup */}
+          <Dialog open={showFeaturesDialog} onOpenChange={setShowFeaturesDialog}>
+            <DialogContent className="max-w-md mx-auto bg-white">
+              <DialogHeader>
+                <DialogTitle className="text-lg font-medium">
+                  Fitur di NDS apa yang dirasa lambat?
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 mt-4">
+                {menuOptions.map((option) => (
+                  <div key={option.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={option.id}
+                      checked={slowFeatures.includes(option.id)}
+                      onCheckedChange={() => handleFeatureToggle(option.id)}
+                    />
+                    <Label htmlFor={option.id}>{option.label}</Label>
+                  </div>
+                ))}
+                {/* Custom feature input for "Fitur lainnya" */}
+                {slowFeatures.includes('fitur-lainnya') && (
+                  <div className="ml-6 mt-2">
+                    <Input
+                      placeholder="Sebutkan fitur lainnya..."
+                      value={customFeature}
+                      onChange={(e) => handleCustomFeatureChange(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       <Footer />
