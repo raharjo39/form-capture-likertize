@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +9,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
 
 const menuOptions = [
   { id: 'pembukaan-rekening', label: 'Pembukaan Rekening' },
@@ -27,8 +27,9 @@ const Index = () => {
   const [feedback, setFeedback] = useState('');
   const [branchCode, setBranchCode] = useState('');
   const [showSlowFeaturesSection, setShowSlowFeaturesSection] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (rating === 0) {
@@ -58,27 +59,52 @@ const Index = () => {
       return;
     }
 
-    // TODO: Save to Supabase after integration is set up
-    console.log('Form data:', {
-      networkPerformance,
-      slowFeatures,
-      rating,
-      feedback,
-      branchCode
-    });
+    setIsSubmitting(true);
 
-    toast({
-      title: "Berhasil",
-      description: "Terima kasih atas feedback Anda"
-    });
+    try {
+      const { error } = await supabase
+        .from('feedback_responses')
+        .insert({
+          network_performance: networkPerformance || null,
+          slow_features: slowFeatures.length > 0 ? slowFeatures : null,
+          rating: rating,
+          feedback: feedback.trim() || null,
+          branch_code: branchCode
+        });
 
-    // Reset form
-    setRating(0);
-    setNetworkPerformance('');
-    setSlowFeatures([]);
-    setFeedback('');
-    setBranchCode('');
-    setShowSlowFeaturesSection(false);
+      if (error) {
+        console.error('Error saving feedback:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Terjadi kesalahan saat menyimpan feedback. Silakan coba lagi."
+        });
+        return;
+      }
+
+      toast({
+        title: "Berhasil",
+        description: "Terima kasih atas feedback Anda"
+      });
+
+      // Reset form
+      setRating(0);
+      setNetworkPerformance('');
+      setSlowFeatures([]);
+      setFeedback('');
+      setBranchCode('');
+      setShowSlowFeaturesSection(false);
+
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Terjadi kesalahan yang tidak terduga. Silakan coba lagi."
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleNetworkPerformanceChange = (value: string) => {
@@ -195,10 +221,13 @@ const Index = () => {
                   setBranchCode('');
                   setShowSlowFeaturesSection(false);
                 }}
+                disabled={isSubmitting}
               >
                 Batal
               </Button>
-              <Button type="submit">Kirim</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Mengirim...' : 'Kirim'}
+              </Button>
             </div>
           </form>
         </div>
