@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import StarRating from '@/components/StarRating';
@@ -24,6 +25,7 @@ const Index = () => {
   const [networkPerformance, setNetworkPerformance] = useState('');
   const [slowFeatures, setSlowFeatures] = useState<string[]>([]);
   const [feedback, setFeedback] = useState('');
+  const [branchCode, setBranchCode] = useState('');
   const [showSlowFeaturesSection, setShowSlowFeaturesSection] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -38,6 +40,33 @@ const Index = () => {
       return;
     }
 
+    if (!branchCode.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Mohon masukkan kode cabang"
+      });
+      return;
+    }
+
+    if (!/^\d{1,6}$/.test(branchCode)) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Kode cabang harus berupa angka maksimal 6 digit"
+      });
+      return;
+    }
+
+    // TODO: Save to Supabase after integration is set up
+    console.log('Form data:', {
+      networkPerformance,
+      slowFeatures,
+      rating,
+      feedback,
+      branchCode
+    });
+
     toast({
       title: "Berhasil",
       description: "Terima kasih atas feedback Anda"
@@ -48,6 +77,7 @@ const Index = () => {
     setNetworkPerformance('');
     setSlowFeatures([]);
     setFeedback('');
+    setBranchCode('');
     setShowSlowFeaturesSection(false);
   };
 
@@ -136,6 +166,23 @@ const Index = () => {
               />
             </div>
 
+            {/* Section 5: Branch Code */}
+            <div className="space-y-2">
+              <Label className="text-lg font-medium">Kode Cabang <span className="text-red-500">*</span></Label>
+              <Input
+                type="text"
+                value={branchCode}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setBranchCode(value);
+                }}
+                placeholder="Masukkan kode cabang (6 digit angka)"
+                maxLength={6}
+                className="w-full"
+              />
+              <p className="text-sm text-gray-500">Maksimal 6 digit angka</p>
+            </div>
+
             <div className="flex justify-end gap-4">
               <Button
                 type="button"
@@ -145,6 +192,7 @@ const Index = () => {
                   setNetworkPerformance('');
                   setSlowFeatures([]);
                   setFeedback('');
+                  setBranchCode('');
                   setShowSlowFeaturesSection(false);
                 }}
               >
