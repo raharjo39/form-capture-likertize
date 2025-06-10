@@ -62,6 +62,10 @@ const Index = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('Testing Supabase connection...');
+      console.log('Supabase URL:', supabase.supabaseUrl);
+      console.log('Supabase Key present:', !!supabase.supabaseKey);
+
       console.log('Submitting data:', {
         network_performance: networkPerformance || null,
         slow_features: slowFeatures.length > 0 ? slowFeatures : null,
@@ -69,6 +73,10 @@ const Index = () => {
         feedback: feedback.trim() || null,
         branch_code: branchCode
       });
+
+      // Test basic connectivity first
+      const testQuery = await supabase.from('feedback_responses').select('count');
+      console.log('Test query result:', testQuery);
 
       const { data, error } = await supabase
         .from('feedback_responses')
@@ -108,6 +116,12 @@ const Index = () => {
 
     } catch (error) {
       console.error('Unexpected error:', error);
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
+      
       toast({
         variant: "destructive",
         title: "Error",
