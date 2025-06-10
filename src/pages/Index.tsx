@@ -63,8 +63,6 @@ const Index = () => {
 
     try {
       console.log('Testing Supabase connection...');
-      console.log('Supabase URL:', supabase.supabaseUrl);
-      console.log('Supabase Key present:', !!supabase.supabaseKey);
 
       console.log('Submitting data:', {
         network_performance: networkPerformance || null,
