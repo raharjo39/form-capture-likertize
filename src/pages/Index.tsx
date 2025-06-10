@@ -62,7 +62,15 @@ const Index = () => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
+      console.log('Submitting data:', {
+        network_performance: networkPerformance || null,
+        slow_features: slowFeatures.length > 0 ? slowFeatures : null,
+        rating: rating,
+        feedback: feedback.trim() || null,
+        branch_code: branchCode
+      });
+
+      const { data, error } = await supabase
         .from('feedback_responses')
         .insert({
           network_performance: networkPerformance || null,
@@ -70,14 +78,17 @@ const Index = () => {
           rating: rating,
           feedback: feedback.trim() || null,
           branch_code: branchCode
-        });
+        })
+        .select();
+
+      console.log('Supabase response:', { data, error });
 
       if (error) {
         console.error('Error saving feedback:', error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Terjadi kesalahan saat menyimpan feedback. Silakan coba lagi."
+          description: `Terjadi kesalahan saat menyimpan feedback: ${error.message}`
         });
         return;
       }
